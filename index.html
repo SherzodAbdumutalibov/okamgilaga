@@ -8,46 +8,80 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: Arial, sans-serif; 
+            display: flex; flex-direction: column; 
+            height: 100vh; padding: 20px;
+        }
+        .container {
+            flex-grow: 1; 
             display: flex; 
-            flex-direction: column; 
-            height: 100vh; 
-            padding: 20px; 
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         #logs { 
-            margin-top: auto; 
-            padding: 10px; 
-            border: 1px solid #ccc; 
-            max-height: 300px; 
-            overflow-y: auto; 
-            background: #f9f9f9; 
+            padding: 10px; border-top: 1px solid #ccc; 
+            max-height: 200px; overflow-y: auto; 
+            background: #f9f9f9; font-size: 14px;
+            width: 100%;
         }
-        button { 
-            margin: 5px; 
-            padding: 10px 15px; 
-            font-size: 16px; 
-            cursor: pointer;
+        button, input { 
+            margin: 5px; padding: 10px; 
+            font-size: 16px; cursor: pointer; 
+        }
+        input {
+            width: 200px;
         }
     </style>
 </head>
 <body>
-    <h1>Добро пожаловать!</h1>
-    <div>
-        <button onclick="sendRequest('/ping')">Проверить /ping</button>
-        <button onclick="sendRequest('/hello')">Проверить /hello</button>
-        <button onclick="sendRequest('/unknown')">Проверить 404</button>
+    <div class="container">
+        <input type="text" id="login" placeholder="Логин">
+        <input type="password" id="password" placeholder="Пароль">
+        <button onclick="sendRequest('/tables')">Имена таблиц</button>
+        <button onclick="sendRequest('/table_data')">Данные в таблицах</button>
+        <button onclick="sendPostRequest()">Добавить пользователя</button>
     </div>
-    
+
     <div id="logs"><strong>Логи запросов:</strong></div>
 
     <script>
-        function sendRequest(endpoint) {
-            fetch(endpoint)
-                .then(response => response.text())
-                .then(data => {
-                    const logs = document.getElementById("logs");
-                    logs.innerHTML += `<p><strong>→ ${endpoint}</strong>: ${data}</p>`;
-                    logs.scrollTop = logs.scrollHeight;
+        async function sendRequest(endpoint) {
+            try {
+                let response = await fetch(endpoint);
+                let data = await response.json();
+                logMessage(endpoint, JSON.stringify(data, null, 2));
+            } catch (error) {
+                logMessage(endpoint, `Ошибка: ${error.message}`);
+            }
+        }
+
+        async function sendPostRequest() {
+            const login = document.getElementById("login").value;
+            const password = document.getElementById("password").value;
+
+            if (!login || !password) {
+                logMessage("/register", "Ошибка: Заполните все поля!");
+                return;
+            }
+
+            const user = { login, password, role: "user" };
+            try {
+                let response = await fetch("/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(user)
                 });
+                let data = await response.json();
+                logMessage("/register", JSON.stringify(data, null, 2));
+            } catch (error) {
+                logMessage("/register", `Ошибка: ${error.message}`);
+            }
+        }
+
+        function logMessage(endpoint, message) {
+            const logs = document.getElementById("logs");
+            logs.innerHTML += `<p><strong>→ ${endpoint}</strong>: <pre>${message}</pre></p>`;
+            logs.scrollTop = logs.scrollHeight;
         }
     </script>
 </body>
