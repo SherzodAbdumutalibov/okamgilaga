@@ -3,85 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Простой сервер</title>
+    <title>Авторизация</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: Arial, sans-serif; 
-            display: flex; flex-direction: column; 
-            height: 100vh; padding: 20px;
-        }
-        .container {
-            flex-grow: 1; 
-            display: flex; 
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        #logs { 
-            padding: 10px; border-top: 1px solid #ccc; 
-            max-height: 200px; overflow-y: auto; 
-            background: #f9f9f9; font-size: 14px;
-            width: 100%;
-        }
-        button, input { 
-            margin: 5px; padding: 10px; 
-            font-size: 16px; cursor: pointer; 
-        }
-        input {
-            width: 200px;
-        }
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 50px; }
+        input, button { margin: 5px; padding: 10px; font-size: 16px; }
+        #message { margin-top: 10px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <input type="text" id="login" placeholder="Логин">
-        <input type="password" id="password" placeholder="Пароль">
-        <button onclick="sendRequest('/tables')">Имена таблиц</button>
-        <button onclick="sendRequest('/table_data')">Данные в таблицах</button>
-        <button onclick="sendPostRequest()">Добавить пользователя</button>
-    </div>
-
-    <div id="logs"><strong>Логи запросов:</strong></div>
+    <h2>Вход</h2>
+    <input type="text" id="username" placeholder="Логин">
+    <input type="password" id="password" placeholder="Пароль">
+    <button onclick="login()">Войти</button>
+    <div id="message"></div>
 
     <script>
-        async function sendRequest(endpoint) {
-            try {
-                let response = await fetch(endpoint);
-                let data = await response.json();
-                logMessage(endpoint, JSON.stringify(data, null, 2));
-            } catch (error) {
-                logMessage(endpoint, `Ошибка: ${error.message}`);
-            }
-        }
-
-        async function sendPostRequest() {
-            const login = document.getElementById("login").value;
-            const password = document.getElementById("password").value;
-
-            if (!login || !password) {
-                logMessage("/register", "Ошибка: Заполните все поля!");
-                return;
-            }
-
-            const user = { login, password, role: "user" };
-            try {
-                let response = await fetch("/register", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(user)
-                });
-                let data = await response.json();
-                logMessage("/register", JSON.stringify(data, null, 2));
-            } catch (error) {
-                logMessage("/register", `Ошибка: ${error.message}`);
-            }
-        }
-
-        function logMessage(endpoint, message) {
-            const logs = document.getElementById("logs");
-            logs.innerHTML += `<p><strong>→ ${endpoint}</strong>: <pre>${message}</pre></p>`;
-            logs.scrollTop = logs.scrollHeight;
+        function login() {
+            fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: document.getElementById("username").value,
+                    password: document.getElementById("password").value
+                })
+            })
+            .then(response => response.json())
+            .then(data => document.getElementById("message").innerText = data.message)
+            .catch(error => console.error("Ошибка:", error));
         }
     </script>
 </body>
